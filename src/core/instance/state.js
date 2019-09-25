@@ -306,6 +306,7 @@ function createWatcher (
   handler: any,
   options?: Object
 ) {
+  // 检查数据是否为对象
   if (isPlainObject(handler)) {
     options = handler
     handler = handler.handler
@@ -315,15 +316,17 @@ function createWatcher (
   }
   return vm.$watch(expOrFn, handler, options)
 }
-
+// 数据挂载方法
 export function stateMixin (Vue: Class<Component>) {
   // flow somehow has problems with directly declared definition object
   // when using Object.defineProperty, so we have to procedurally build up
   // the object here.
+  // $data 属性实际上代理的是 _data 这个实例属性，$props 代理的是 _props 这个实例属性。
   const dataDef = {}
   dataDef.get = function () { return this._data }
   const propsDef = {}
   propsDef.get = function () { return this._props }
+  // 非生产环境下，如果修改这两个属性，会提醒该属性是只读的，不能修改
   if (process.env.NODE_ENV !== 'production') {
     dataDef.set = function () {
       warn(
@@ -339,20 +342,22 @@ export function stateMixin (Vue: Class<Component>) {
   Object.defineProperty(Vue.prototype, '$data', dataDef)
   Object.defineProperty(Vue.prototype, '$props', propsDef)
 
-  Vue.prototype.$set = set
-  Vue.prototype.$delete = del
-
+  Vue.prototype.$set = set // 挂载$set方法,给对象设置响应式属性
+  Vue.prototype.$delete = del // 挂载$delete方法
+  // 挂载$watch方法
   Vue.prototype.$watch = function (
     expOrFn: string | Function,
     cb: any,
     options?: Object
   ): Function {
     const vm: Component = this
+    // 如果回调函数是对象，则需要取出相应的回调函数，再次调用$watch方法
     if (isPlainObject(cb)) {
       return createWatcher(vm, expOrFn, cb, options)
     }
     options = options || {}
     options.user = true
+    // 初始化watch对象
     const watcher = new Watcher(vm, expOrFn, cb, options)
     if (options.immediate) {
       try {
@@ -361,6 +366,7 @@ export function stateMixin (Vue: Class<Component>) {
         handleError(error, vm, `callback for immediate watcher "${watcher.expression}"`)
       }
     }
+    // 返回取消观察函数，用来停止触发回调
     return function unwatchFn () {
       watcher.teardown()
     }

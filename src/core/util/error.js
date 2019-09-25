@@ -42,8 +42,10 @@ export function invokeWithErrorHandling (
 ) {
   let res
   try {
+    // 调用触发的函数
     res = args ? handler.apply(context, args) : handler.call(context)
     if (res && !res._isVue && isPromise(res) && !res._handled) {
+      // 失败处理
       res.catch(e => handleError(e, vm, info + ` (Promise/async)`))
       // issue #9511
       // avoid catch triggering multiple times when nested calls

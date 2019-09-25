@@ -1,14 +1,22 @@
 // 打包总入口
 const path = require('path')
-const buble = require('rollup-plugin-buble')
-const alias = require('rollup-plugin-alias')
-const cjs = require('rollup-plugin-commonjs')
-const replace = require('rollup-plugin-replace')
-const node = require('rollup-plugin-node-resolve')
-const flow = require('rollup-plugin-flow-no-whitespace')
+const buble = require('rollup-plugin-buble') // 进行代码编译，将ES6+代码编译成ES2015标准
+const alias = require('rollup-plugin-alias') // 提供modules名称的 alias 和reslove 功能
+const cjs = require('rollup-plugin-commonjs') // 将node_module中间的包转成es6语法 
+const replace = require('rollup-plugin-replace') // 替换待打包文件里的一些变量，如 process在浏览器端是不存在的，需要被替换
+const node = require('rollup-plugin-node-resolve') // 帮助寻找node_modules中的包
+const flow = require('rollup-plugin-flow-no-whitespace') // 清除flow类型检查部分的代码
 const version = process.env.VERSION || require('../package.json').version
 const weexVersion = process.env.WEEX_VERSION || require('../packages/weex-vue-framework/package.json').version
 const featureFlags = require('./feature-flags')
+/*
+format
+amd – 异步模块定义，用于像RequireJS这样的模块加载器
+cjs – CommonJS，适用于 Node 和 Browserify/Webpack
+es – 将软件包保存为ES模块文件
+iife – 一个自动执行的功能，适合作为<script>标签。（如果要为应用程序创建一个捆绑包，您可能想要使用它，因为它会使文件大小变小。）
+umd – 通用模块定义，以amd，cjs 和 iife 为一体
+*/
 
 const banner =
   '/*!\n' +
@@ -152,7 +160,7 @@ const builds = {
     format: 'umd',
     env: 'development',
     moduleName: 'VueTemplateCompiler',
-    plugins: [node(), cjs()]
+    plugins: [node(), cjs()] // node cvj
   },
   // Web server renderer (CommonJS).
   'web-server-renderer-dev': {
@@ -219,10 +227,10 @@ function genConfig (name) {
   const config = {
     input: opts.entry, // 设置打包入口
     external: opts.external, // 应该保留在bundle外部引用的模块ID
-    plugins: [
-      flow(),
-      alias(Object.assign({}, aliases, opts.alias))
-    ].concat(opts.plugins || []),
+    plugins: [ // 设置插件
+      flow(), // 清楚静态类型检查代码
+      alias(Object.assign({}, aliases, opts.alias)) // 设置简短别名
+    ].concat(opts.plugins || []),  // 结合配置项中间的plugins
     output: {
       file: opts.dest,
       format: opts.format,
@@ -233,7 +241,7 @@ function genConfig (name) {
       if (!/Circular/.test(msg)) {
         warn(msg)
       }
-    }
+    } // 拦截警告信息
   }
 
   // built-in vars
@@ -242,20 +250,32 @@ function genConfig (name) {
     __WEEX_VERSION__: weexVersion,
     __VERSION__: version
   }
-  // feature flags
+  // feature flags //
   Object.keys(featureFlags).forEach(key => {
     vars[`process.env.${key}`] = featureFlags[key]
   })
-  // build-specific env
+  // build-specific env opts.env: development or production
   if (opts.env) {
     vars['process.env.NODE_ENV'] = JSON.stringify(opts.env)
   }
+  /*
+  vars = {
+    __WEEX__: !!opts.weex,
+    __WEEX_VERSION__: weexVersion,
+    __VERSION__: version,
+    process.env.NEW_SLOT_SYNTAX: true,
+    process.env.VBIND_PROP_SHORTHAND: false,
+    process.env.NODE_ENV: development or production,
+  }
+  */
+  // 使用rollup-plugin-replace来查找和替换目前的环境变量
   config.plugins.push(replace(vars))
 
+  // 判断是否需要将ES6 转成ES5
   if (opts.transpile !== false) {
     config.plugins.push(buble())
   }
-
+  // 定义生成包名称
   Object.defineProperty(config, '_name', {
     enumerable: false,
     value: name

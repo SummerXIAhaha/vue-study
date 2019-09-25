@@ -51,6 +51,7 @@ export function updateComponentListeners (
 
 export function eventsMixin (Vue: Class<Component>) {
   const hookRE = /^hook:/
+  // 挂载$on事件，可以传入数组或者字符串
   Vue.prototype.$on = function (event: string | Array<string>, fn: Function): Component {
     const vm: Component = this
     if (Array.isArray(event)) {
@@ -68,8 +69,10 @@ export function eventsMixin (Vue: Class<Component>) {
     return vm
   }
 
+  // 挂载$once事件，监听一个自定义事件，但是只触发一次，在第一次触发之后移除监听器。
   Vue.prototype.$once = function (event: string, fn: Function): Component {
     const vm: Component = this
+    // 调用之前先调用$off方法移除自定义事件监听器。
     function on () {
       vm.$off(event, on)
       fn.apply(vm, arguments)
@@ -79,9 +82,11 @@ export function eventsMixin (Vue: Class<Component>) {
     return vm
   }
 
+  // 移除自定义事件监听器。
   Vue.prototype.$off = function (event?: string | Array<string>, fn?: Function): Component {
     const vm: Component = this
     // all
+    // 如果没有提供参数，则移除所有的事件监听器；
     if (!arguments.length) {
       vm._events = Object.create(null)
       return vm
@@ -94,6 +99,7 @@ export function eventsMixin (Vue: Class<Component>) {
       return vm
     }
     // specific event
+    // 如果只提供了事件，则移除该事件所有的监听器；
     const cbs = vm._events[event]
     if (!cbs) {
       return vm
@@ -103,6 +109,7 @@ export function eventsMixin (Vue: Class<Component>) {
       return vm
     }
     // specific handler
+    // 如果同时提供了事件与回调，则只移除这个回调的监听器。
     let cb
     let i = cbs.length
     while (i--) {
@@ -115,9 +122,11 @@ export function eventsMixin (Vue: Class<Component>) {
     return vm
   }
 
+  // 触发当前实例上的事件。附加参数都会传给监听器回调。
   Vue.prototype.$emit = function (event: string): Component {
     const vm: Component = this
     if (process.env.NODE_ENV !== 'production') {
+      // $emit传入的事件名称只能使用小写，不能使用大写的驼峰规则命名，如果是大写的会转为连字符
       const lowerCaseEvent = event.toLowerCase()
       if (lowerCaseEvent !== event && vm._events[lowerCaseEvent]) {
         tip(
@@ -132,6 +141,7 @@ export function eventsMixin (Vue: Class<Component>) {
     let cbs = vm._events[event]
     if (cbs) {
       cbs = cbs.length > 1 ? toArray(cbs) : cbs
+      // 获取后面的参数
       const args = toArray(arguments, 1)
       const info = `event handler for "${event}"`
       for (let i = 0, l = cbs.length; i < l; i++) {

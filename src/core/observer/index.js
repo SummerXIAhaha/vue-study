@@ -132,6 +132,7 @@ export function observe (value: any, asRootData: ?boolean): Observer | void {
 /**
  * Define a reactive property on an Object.
  */
+// 添加响应式监测机制
 export function defineReactive (
   obj: Object,
   key: string,
@@ -198,21 +199,27 @@ export function defineReactive (
  * triggers change notification if the property doesn't
  * already exist.
  */
+// 给复杂数据类型添加属性
 export function set (target: Array<any> | Object, key: any, val: any): any {
+  // 如果是简单数据类型或者undefined，null，提醒不能添加
   if (process.env.NODE_ENV !== 'production' &&
     (isUndef(target) || isPrimitive(target))
   ) {
     warn(`Cannot set reactive property on undefined, null, or primitive value: ${(target: any)}`)
   }
+  // 给数组添加属性
   if (Array.isArray(target) && isValidArrayIndex(key)) {
     target.length = Math.max(target.length, key)
     target.splice(key, 1, val)
     return val
   }
+  // 对象中存在该属性时，直接修改
   if (key in target && !(key in Object.prototype)) {
     target[key] = val
     return val
   }
+  
+  // 判断对象是否是Vue实例或$data，提醒不能添加属性
   const ob = (target: any).__ob__
   if (target._isVue || (ob && ob.vmCount)) {
     process.env.NODE_ENV !== 'production' && warn(
@@ -221,10 +228,12 @@ export function set (target: Array<any> | Object, key: any, val: any): any {
     )
     return val
   }
+  // 如果不是,则直接添加
   if (!ob) {
     target[key] = val
     return val
   }
+  // 给该属性添加响应式属性
   defineReactive(ob.value, key, val)
   ob.dep.notify()
   return val
