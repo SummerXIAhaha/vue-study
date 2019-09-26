@@ -14,8 +14,10 @@ let uid = 0
 // 在Vue的原型上添加_init方法
 export function initMixin (Vue: Class<Component>) {
   Vue.prototype._init = function (options?: Object) {
+    // 声明常量，this => Vue
     const vm: Component = this
     // a uid
+    // 实例vue的唯一标识
     vm._uid = uid++
 
     let startTag, endTag
@@ -27,6 +29,7 @@ export function initMixin (Vue: Class<Component>) {
     }
 
     // a flag to avoid this being observed
+    //  标记该实例是vue实例
     vm._isVue = true
     // merge options
     if (options && options._isComponent) {
@@ -35,10 +38,11 @@ export function initMixin (Vue: Class<Component>) {
       // internal component options needs special treatment.
       initInternalComponent(vm, options)
     } else {
+      // 用于当前 Vue 实例的初始化选项。需要在选项中包含自定义属性时会有用处：
       vm.$options = mergeOptions(
-        resolveConstructorOptions(vm.constructor),
-        options || {},
-        vm
+        resolveConstructorOptions(vm.constructor), // Vue.options
+        options || {}, // 构造函数传参 el: '#app', data
+        vm // vue实例对象
       )
     }
     /* istanbul ignore else */
@@ -90,8 +94,13 @@ export function initInternalComponent (vm: Component, options: InternalComponent
   }
 }
 
+// 获取构造函数的options  Ctor：构造函数
 export function resolveConstructorOptions (Ctor: Class<Component>) {
   let options = Ctor.options
+
+  // super是子类构造函数才有的属性
+  // const Sub = Vue.extend()
+  // console.log(Sub.super)  // Vue
   if (Ctor.super) {
     const superOptions = resolveConstructorOptions(Ctor.super)
     const cachedSuperOptions = Ctor.superOptions

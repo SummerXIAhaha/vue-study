@@ -27,14 +27,31 @@ Vue.config.getTagNamespace = getTagNamespace
 Vue.config.isUnknownElement = isUnknownElement
 
 // install platform runtime directives & components
+// 在 Vue.options 上添加 web 平台运行时的特定组件和指令。
 extend(Vue.options.directives, platformDirectives)
 extend(Vue.options.components, platformComponents)
+/**
+ * Vue.options = {
+    components: {
+      KeepAlive,
+      Transition,
+      TransitionGroup
+    },
+    directives: {
+      model,
+      show
+    },
+    filters: Object.create(null),
+    _base: Vue
+  }
+*/
 
 // install platform patch function
 // 在浏览器中指向patch函数，非浏览器环境中为空函数（noop）
 Vue.prototype.__patch__ = inBrowser ? patch : noop
 
 // public mount method
+// 挂在公共$mount方法
 Vue.prototype.$mount = function (
   el?: string | Element,
   hydrating?: boolean
@@ -45,6 +62,7 @@ Vue.prototype.$mount = function (
 
 // devtools global hook
 /* istanbul ignore next */
+// 浏览器端挂载vue-devtools 的全局钩子
 if (inBrowser) {
   setTimeout(() => {
     if (config.devtools) {
@@ -75,3 +93,10 @@ if (inBrowser) {
 }
 
 export default Vue
+
+/**
+ * 设置平台化的 Vue.config。
+  在 Vue.options 上混合了两个指令(directives)，分别是 model 和 show。
+  在 Vue.options 上混合了两个组件(components)，分别是 Transition 和 TransitionGroup。
+  在 Vue.prototype 上添加了两个方法：__patch__ 和 $mount。
+ */
