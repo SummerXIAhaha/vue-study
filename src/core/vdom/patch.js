@@ -71,8 +71,11 @@ export function createPatchFunction (backend) {
   let i, j
   const cbs = {}
 
+  // nodeOps 封装了一系列 DOM 操作的方法，modules 定义了一些模块的钩子函数的实现
+  // 函数柯里化
   const { modules, nodeOps } = backend
 
+  // 钩子函数
   for (i = 0; i < hooks.length; ++i) {
     cbs[hooks[i]] = []
     for (j = 0; j < modules.length; ++j) {
@@ -122,6 +125,7 @@ export function createPatchFunction (backend) {
 
   let creatingElmInVPre = 0
 
+  // 虚拟节点创建真实的 DOM 并插入到它的父节点中。
   function createElm (
     vnode,
     insertedVnodeQueue,
@@ -153,6 +157,7 @@ export function createPatchFunction (backend) {
         if (data && data.pre) {
           creatingElmInVPre++
         }
+        // 未注册组件检测
         if (isUnknownElement(vnode, creatingElmInVPre)) {
           warn(
             'Unknown custom element: <' + tag + '> - did you ' +
@@ -203,6 +208,7 @@ export function createPatchFunction (backend) {
       insert(parentElm, vnode.elm, refElm)
     } else {
       vnode.elm = nodeOps.createTextNode(vnode.text)
+      // 插入到父节点中，因为是递归调用
       insert(parentElm, vnode.elm, refElm)
     }
   }
@@ -697,6 +703,7 @@ export function createPatchFunction (backend) {
     }
   }
 
+  // oldVnode 表示旧的 VNode 节点，它也可以不存在或者是一个 DOM 对象；vnode 表示执行 _render 后返回的 VNode 的节点；hydrating 表示是否是服务端渲染；removeOnly 是给 transition-group 用的，
   return function patch (oldVnode, vnode, hydrating, removeOnly) {
     if (isUndef(vnode)) {
       if (isDef(oldVnode)) invokeDestroyHook(oldVnode)

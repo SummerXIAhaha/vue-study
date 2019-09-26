@@ -29,6 +29,7 @@ export function initGlobalAPI (Vue: GlobalAPI) {
       )
     }
   }
+  // 在vue原型上添加config只读属性
   Object.defineProperty(Vue, 'config', configDef)
 
   // exposed util methods.
@@ -52,6 +53,7 @@ export function initGlobalAPI (Vue: GlobalAPI) {
   }
 
   Vue.options = Object.create(null)
+  // 'component', 'directive', 'filter'
   ASSET_TYPES.forEach(type => {
     Vue.options[type + 's'] = Object.create(null)
   })
@@ -59,9 +61,28 @@ export function initGlobalAPI (Vue: GlobalAPI) {
   // this is used to identify the "base" constructor to extend all plain-object
   // components with in Weex's multi-instance scenarios.
   Vue.options._base = Vue
+  /*
+  Vue.options = {
+    components: Object.create(null),
+    directives: Object.create(null),
+    filters: Object.create(null),
+    _base: Vue
+  }
+  */
 
+  // Mix properties into target object.
   extend(Vue.options.components, builtInComponents)
 
+  /*
+  Vue.options = {
+    components: {
+      KeepAlive
+    },
+    directives: Object.create(null),
+    filters: Object.create(null),
+    _base: Vue
+  }
+  */
   initUse(Vue)
   initMixin(Vue)
   initExtend(Vue)

@@ -1,14 +1,18 @@
+// 从 Vue 的出生文件导入 Vue
 import Vue from './instance/index'
 import { initGlobalAPI } from './global-api/index'
 import { isServerRendering } from 'core/util/env'
 import { FunctionalRenderContext } from 'core/vdom/create-functional-component'
 
+// 将 Vue 构造函数作为参数，传递给 initGlobalAPI 方法，
 initGlobalAPI(Vue)
 
+// 在 Vue.prototype 上添加 $isServer 属性，是否为服务器渲染（只读属性）
 Object.defineProperty(Vue.prototype, '$isServer', {
   get: isServerRendering
 })
 
+// 在 Vue.prototype 上添加 $ssrContext 属性（只读属性）
 Object.defineProperty(Vue.prototype, '$ssrContext', {
   get () {
     /* istanbul ignore next */

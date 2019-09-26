@@ -60,12 +60,15 @@ export function setCurrentRenderingInstance (vm: Component) {
 
 export function renderMixin (Vue: Class<Component>) {
   // install runtime convenience helpers
+  // 添加一系列方法
   installRenderHelpers(Vue.prototype)
 
+  // 挂载nextTick方法
   Vue.prototype.$nextTick = function (fn: Function) {
     return nextTick(fn, this)
   }
 
+  // 挂载render函数
   Vue.prototype._render = function (): VNode {
     const vm: Component = this
     const { render, _parentVnode } = vm.$options

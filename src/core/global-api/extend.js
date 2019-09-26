@@ -16,6 +16,22 @@ export function initExtend (Vue: GlobalAPI) {
   /**
    * Class inheritance
    */
+  // 使用基础 Vue 构造器，创建一个“子类”。参数是一个包含组件选项的对象。
+  /**
+  // 创建构造器
+  var Profile = Vue.extend({
+    template: '<p>{{firstName}} {{lastName}} aka {{alias}}</p>',
+    data: function () {
+      return {
+        firstName: 'Walter',
+        lastName: 'White',
+        alias: 'Heisenberg'
+      }
+    }
+  })
+  // 创建 Profile 实例，并挂载到一个元素上。
+  new Profile().$mount('#mount-point')
+   */
   Vue.extend = function (extendOptions: Object): Function {
     extendOptions = extendOptions || {}
     const Super = this

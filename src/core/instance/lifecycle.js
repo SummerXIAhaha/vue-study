@@ -56,11 +56,12 @@ export function initLifecycle (vm: Component) {
 }
 
 export function lifecycleMixin (Vue: Class<Component>) {
+  // 把 VNode 渲染成真实的 DOM
   Vue.prototype._update = function (vnode: VNode, hydrating?: boolean) {
     const vm: Component = this
     const prevEl = vm.$el
     const prevVnode = vm._vnode
-    const restoreActiveInstance = setActiveInstance(vm)
+    const restoreActiveInstance = setActiveInstance(vm)   
     vm._vnode = vnode
     // Vue.prototype.__patch__ is injected in entry points
     // based on the rendering backend used.
@@ -87,6 +88,7 @@ export function lifecycleMixin (Vue: Class<Component>) {
     // updated in a parent's updated hook.
   }
 
+  // 迫使 Vue 实例重新渲染。注意它仅仅影响实例本身和插入插槽内容的子组件，而不是所有子组件。
   Vue.prototype.$forceUpdate = function () {
     const vm: Component = this
     if (vm._watcher) {
@@ -94,11 +96,13 @@ export function lifecycleMixin (Vue: Class<Component>) {
     }
   }
 
+  // 完全销毁一个实例。清理它与其它实例的连接，解绑它的全部指令及事件监听器。
   Vue.prototype.$destroy = function () {
     const vm: Component = this
     if (vm._isBeingDestroyed) {
       return
     }
+    // 触发 beforeDestroy钩子。
     callHook(vm, 'beforeDestroy')
     vm._isBeingDestroyed = true
     // remove self from parent
@@ -124,6 +128,7 @@ export function lifecycleMixin (Vue: Class<Component>) {
     // invoke destroy hooks on current rendered tree
     vm.__patch__(vm._vnode, null)
     // fire destroyed hook
+    // 触发destroyed钩子。
     callHook(vm, 'destroyed')
     // turn off all instance listeners.
     vm.$off()
