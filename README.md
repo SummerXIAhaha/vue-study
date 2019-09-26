@@ -1,17 +1,19 @@
 ## vue技术内幕 + vue源码学习
+============================ 
 
 ### 起点  npm run dev
 rollup -w -c scripts/config.js --environment TARGET:web-full-dev
 
 ### 起点配置文件 scripts/config.js
-* 起点配置项 ：'web-full-dev': {  
-                entry: resolve('web/entry-runtime-with-compiler.js'),  
-                dest: resolve('dist/vue.js'),  
-                format: 'umd',  
-                env: 'development',  
-                alias: { he: './entity-decoder' },  
-                banner  
-              },  
+* 起点配置项 ：
+>'web-full-dev': {  
+>>entry: resolve('web/entry-runtime-with-compiler.js'),  
+>>dest: resolve('dist/vue.js'),  
+>>format: 'umd',  
+>>env: 'development',  
+>>alias: { he: './entity-decoder' },  
+>>banner  
+>},  
 
 ### 起点文件 web/entry-runtime-with-compiler.js
 
@@ -38,11 +40,12 @@ rollup -w -c scripts/config.js --environment TARGET:web-full-dev
 * Vue.version = '__VERSION__'
 * Vue.compile = compileToFunctions
 
-初始options：  Vue.options = {  
-                components: {  
-                  KeepAlive  
-                },  
-                directives: Object.create(null),  
-                filters: Object.create(null),  
-                _base: Vue   
-              }  
+初始options：  
+>Vue.options = {  
+>>components: {  
+>>>KeepAlive  
+>>},  
+>>directives: Object.create(null),  
+>>filters: Object.create(null),  
+>>_base: Vue   
+>}  
