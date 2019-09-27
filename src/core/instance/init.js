@@ -39,6 +39,7 @@ export function initMixin (Vue: Class<Component>) {
       initInternalComponent(vm, options)
     } else {
       // 用于当前 Vue 实例的初始化选项。需要在选项中包含自定义属性时会有用处：
+      //规范props，inject，directives，合并extends，mixins，挂载合并属性的策略或者直接合并属性
       vm.$options = mergeOptions(
         resolveConstructorOptions(vm.constructor), // Vue.options
         options || {}, // 构造函数传参 el: '#app', data

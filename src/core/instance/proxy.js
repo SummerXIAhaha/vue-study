@@ -59,6 +59,7 @@ if (process.env.NODE_ENV !== 'production') {
         (typeof key === 'string' && key.charAt(0) === '_' && !(key in target.$data))
       if (!has && !isAllowed) {
         if (key in target.$data) warnReservedPrefix(target, key)
+        // 在渲染的时候引用了 key，但是在实例对象上并没有定义 key 这个属性或方法
         else warnNonPresent(target, key)
       }
       return has || !isAllowed
@@ -82,6 +83,7 @@ if (process.env.NODE_ENV !== 'production') {
       const handlers = options.render && options.render._withStripped
         ? getHandler
         : hasHandler
+        // 用于修改某些操作的默认行为
       vm._renderProxy = new Proxy(vm, handlers)
     } else {
       vm._renderProxy = vm

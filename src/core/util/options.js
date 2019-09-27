@@ -50,29 +50,33 @@ if (process.env.NODE_ENV !== 'production') {
  * Helper that recursively merges two data objects together.
  */
 function mergeData (to: Object, from: ?Object): Object {
-  // 学到这里啦
+  // 没有 from 直接返回 to
   if (!from) return to
   let key, toVal, fromVal
 
   const keys = hasSymbol
     ? Reflect.ownKeys(from)
     : Object.keys(from)
-
+  // 遍历 from 的 key
   for (let i = 0; i < keys.length; i++) {
     key = keys[i]
     // in case the object is already observed...
+    // 防止__ob__属性被重复设置
     if (key === '__ob__') continue
     toVal = to[key]
     fromVal = from[key]
+    // 如果 from 对象中的 key 不在 to 对象中，则使用 set 函数为 to 对象设置 key 及相应的值
     if (!hasOwn(to, key)) {
       set(to, key, fromVal)
     } else if (
+      // 如果 from 对象中的 key 也在 to 对象中，且这两个属性的值都是纯对象则递归进行深度合并
       toVal !== fromVal &&
       isPlainObject(toVal) &&
       isPlainObject(fromVal)
     ) {
       mergeData(toVal, fromVal)
     }
+    // 其他情况什么都不做
   }
   return to
 }
@@ -94,11 +98,19 @@ export function mergeDataOrFn (
     if (!parentVal) {
       return childVal
     }
+    // 如果没有子选项则使用父选项，没有父选项就直接使用子选项，且这两个选项都能保证是函数，如果父子选项同时存在，则代码继续进行，
     // when parentVal & childVal are both present,
     // we need to return a function that returns the
     // merged result of both functions... no need to
     // check if parentVal is a function here because
     // it has to be a function to pass previous merges.
+    /**
+     *  data (vm) {
+          return {
+            childData: vm.parentData
+          }
+        }
+     */
     return function mergedDataFn () {
       return mergeData(
         typeof childVal === 'function' ? childVal.call(this, this) : childVal,
@@ -106,6 +118,7 @@ export function mergeDataOrFn (
       )
     }
   } else {
+    // 当合并处理的是非子组件的选项时 `data` 函数为 `mergedInstanceDataFn` 函数
     return function mergedInstanceDataFn () {
       // instance merge
       const instanceData = typeof childVal === 'function'
@@ -124,6 +137,8 @@ export function mergeDataOrFn (
 }
 
 // 添加 data 策略函数，用来合并处理 data 选项。
+// 在合并阶段 strats.data 将被处理成一个函数，但是这个函数并没有被执行，而是到了后面初始化的阶段才执行的，这个时候才会调用 mergeData 对数据进行合并处理，
+// Vue 的初始化的时候，大家就会发现 inject 和 props 这两个选项的初始化是先于 data 选项的，这就保证了我们能够使用 props 初始化 data 中的数据
 strats.data = function (
   parentVal: any,
   childVal: any,
@@ -149,18 +164,19 @@ strats.data = function (
 
 /**
  * Hooks and props are merged as arrays.
+ * 生命周期钩子是可以写成数组的, 按顺序执行
  */
 function mergeHook (
   parentVal: ?Array<Function>,
   childVal: ?Function | ?Array<Function>
 ): ?Array<Function> {
-  const res = childVal
-    ? parentVal
-      ? parentVal.concat(childVal)
-      : Array.isArray(childVal)
-        ? childVal
-        : [childVal]
-    : parentVal
+  const res = childVal // 是否有 childVal，即判断组件的选项中是否有对应名字的生命周期钩子函数)
+    ? parentVal // 如果有 childVal 则判断是否有 parentVal
+      ? parentVal.concat(childVal) // 如果有 parentVal 则使用 concat 方法将二者合并为一个数组
+      : Array.isArray(childVal) // 如果没有 parentVal 则判断 childVal 是不是一个数组
+        ? childVal // 如果 childVal 是一个数组则直接返回
+        : [childVal] // 否则将其作为数组的元素，然后返回数组
+    : parentVal // 如果没有 childVal 则直接返回 parentVal
   return res
     ? dedupeHooks(res)
     : res
@@ -176,6 +192,7 @@ function dedupeHooks (hooks) {
   return res
 }
 
+// 合并钩子函数策略
 LIFECYCLE_HOOKS.forEach(hook => {
   strats[hook] = mergeHook
 })
@@ -186,6 +203,7 @@ LIFECYCLE_HOOKS.forEach(hook => {
  * When a vm is present (instance creation), we need to do
  * a three-way merge between constructor options, instance
  * options and parent options.
+ * 合并处理 directives、filters 以及 components
  */
 function mergeAssets (
   parentVal: ?Object,
@@ -211,6 +229,7 @@ ASSET_TYPES.forEach(function (type) {
  *
  * Watchers hashes should not overwrite one
  * another, so we merge them as arrays.
+ * 被合并处理后的 watch 选项下的每个键值，有可能是一个数组，也有可能是一个函数。
  */
 strats.watch = function (
   parentVal: ?Object,
@@ -219,6 +238,7 @@ strats.watch = function (
   key: string
 ): ?Object {
   // work around Firefox's Object.prototype.watch...
+  // 发现组件选项是浏览器原生的 watch 时，那说明用户并没有提供 Vue 的 watch 选项，直接重置为 undefined。
   if (parentVal === nativeWatch) parentVal = undefined
   if (childVal === nativeWatch) childVal = undefined
   /* istanbul ignore if */
@@ -229,6 +249,7 @@ strats.watch = function (
   if (!parentVal) return childVal
   const ret = {}
   extend(ret, parentVal)
+  // 检测子选项中的值是否也在父选项中，如果在的话将父子选项合并到一个数组，否则直接把子选项变成一个数组返回。
   for (const key in childVal) {
     let parent = ret[key]
     const child = childVal[key]
@@ -244,6 +265,7 @@ strats.watch = function (
 
 /**
  * Other object hashes.
+ * 合并props，methods，inject，computed
  */
 strats.props =
 strats.methods =
